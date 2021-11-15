@@ -29,6 +29,7 @@ db_drop_and_create_all()
         or appropriate status code indicating reason for failure
 '''
 @app.route('/drinks')
+@requires_auth('get:drinks')
 def getDrinks():
     selections = Drink.query.all()
     drinks = [drink.short() for drink in selections]
@@ -47,6 +48,7 @@ def getDrinks():
         or appropriate status code indicating reason for failure
 '''
 @app.route('/drinks-detail')
+@requires_auth('get:drinks-detail')
 def getDrinks_Detail():
     selections = Drink.query.all()
     drinks = [drink.long() for drink in selections]
@@ -66,6 +68,7 @@ def getDrinks_Detail():
         or appropriate status code indicating reason for failure
 '''
 @app.route('/drinks', methods=['POST'])
+@requires_auth('post:drinks')
 def addDrink():
     if not request.json:
         abort(400)
@@ -98,6 +101,7 @@ def addDrink():
         or appropriate status code indicating reason for failure
 '''
 @app.route('/drinks/<int:id>', methods=['PATCH'])
+@requires_auth('patch:drinks')
 def updateDrink(id):
     drink = Drink.query.get(id)
     if not drink:
@@ -131,6 +135,7 @@ def updateDrink(id):
         or appropriate status code indicating reason for failure
 '''
 @app.route('/drinks/<int:id>', methods=['DELETE'])
+@requires_auth('delete:drinks')
 def deleteDrink(id):
     drink = Drink.query.get(id)
     if not drink:
