@@ -29,7 +29,6 @@ db_drop_and_create_all()
         or appropriate status code indicating reason for failure
 '''
 @app.route('/drinks')
-@requires_auth('get:drinks')
 def getDrinks():
     selections = Drink.query.all()
     drinks = [drink.short() for drink in selections]
@@ -49,7 +48,7 @@ def getDrinks():
 '''
 @app.route('/drinks-detail')
 @requires_auth('get:drinks-detail')
-def getDrinks_Detail():
+def getDrinks_Detail(payload):
     selections = Drink.query.all()
     drinks = [drink.long() for drink in selections]
     return jsonify({
@@ -69,19 +68,19 @@ def getDrinks_Detail():
 '''
 @app.route('/drinks', methods=['POST'])
 @requires_auth('post:drinks')
-def addDrink():
+def addDrink(payload):
     if not request.json:
         abort(400)
     body = request.json
     if ('title' not in body) or ('recipe' not in body):
         abort(422)
 #check if recipe contain long information
-    for ingridient in json.loads(body['recipe']):
+    for ingridient in body['recipe']:
         if('color' not in ingridient) or ('name' not in ingridient) or ('parts' not in ingridient ):
             abort(422)
     drink = Drink(
         title = body['title'],
-        recipe = body['recipe']
+        recipe = json.dumps(body['recipe'])
         )
     drink.insert()
     
@@ -102,7 +101,7 @@ def addDrink():
 '''
 @app.route('/drinks/<int:id>', methods=['PATCH'])
 @requires_auth('patch:drinks')
-def updateDrink(id):
+def updateDrink(payload, id):
     drink = Drink.query.get(id)
     if not drink:
         abort(404)
@@ -112,11 +111,11 @@ def updateDrink(id):
     if ('title' not in body) or ('recipe' not in body):
         abort(422)
 #check if recipe contain long information
-    for ingridient in json.loads(body['recipe']):
+    for ingridient in body['recipe']:
         if('color' not in ingridient) or ('name' not in ingridient) or ('parts' not in ingridient ):
             abort(422)
     title['title'] = body['title']
-    drink['recipe'] = body['recipe']
+    drink['recipe'] = json.dumps(body['recipe'])
     drink.update()
     
     return jsonify({
@@ -136,7 +135,7 @@ def updateDrink(id):
 '''
 @app.route('/drinks/<int:id>', methods=['DELETE'])
 @requires_auth('delete:drinks')
-def deleteDrink(id):
+def deleteDrink(payload,id):
     drink = Drink.query.get(id)
     if not drink:
         abort(404)
