@@ -75,12 +75,19 @@ def addDrink(payload):
     if ('title' not in body) or ('recipe' not in body):
         abort(422)
 #check if recipe contain long information
-    for ingridient in body['recipe']:
+    recipe = body['recipe']
+    
+    if isinstance(body['recipe'], dict):
+        a = []
+        a.append(recipe)
+        recipe = a
+
+    for ingridient in recipe:
         if('color' not in ingridient) or ('name' not in ingridient) or ('parts' not in ingridient ):
-            abort(422)
+            abort(422)      
     drink = Drink(
         title = body['title'],
-        recipe = json.dumps(body['recipe'])
+        recipe = json.dumps(recipe)
         )
     drink.insert()
     
@@ -108,14 +115,17 @@ def updateDrink(payload, id):
     if not request.json:
         abort(400)
     body = request.json
-    if ('title' not in body) or ('recipe' not in body):
+   
+    if ('title' not in body) and ('recipe' not in body):
         abort(422)
 #check if recipe contain long information
-    for ingridient in body['recipe']:
-        if('color' not in ingridient) or ('name' not in ingridient) or ('parts' not in ingridient ):
-            abort(422)
-    title['title'] = body['title']
-    drink['recipe'] = json.dumps(body['recipe'])
+    if 'recipe' in body:
+        for ingridient in body['recipe']:
+            if('color' not in ingridient) or ('name' not in ingridient) or ('parts' not in ingridient ):
+                abort(422)
+        drink['recipe'] = json.dumps(body['recipe'])
+    if 'title' not in body:
+        drink['title'] = body['title']
     drink.update()
     
     return jsonify({
@@ -186,15 +196,9 @@ def error_404(error):
 @TODO implement error handler for AuthError
     error handler should conform to general task above
 '''
-@app.errorhandler(401)
-def error_401(error):
+@app.errorhandler(AuthError)
+def autherror(error):
     return (
-        jsonify({"success": False, "error": 401, "message": "authorization failed"}),
-            401
+        jsonify({"success": False, "error": error.status_code, "message": error.error}),
+            error.status_code
     )
-
-@app.errorhandler(400)
-def bad_request(error):
-    return (jsonify({"success": False, "error": 400, "message": "bad request"}), 400)
-
- 
